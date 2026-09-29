@@ -1,4 +1,4 @@
-# crapide
+shed# crapide
 
 `crapide` is the future set of IDE adapters for the external `crap4csharp` CLI. The first package targets desktop VS Code and Cursor. The current P2 extension is intentionally inert: **CRAP: Analyze Workspace** only displays a “not implemented” message. It does not run the CLI, tests, or coverage.
 
