@@ -20,4 +20,6 @@ Thanks for helping improve `crapide`. The default branch is `main`. Please propo
 
 CI runs on pull requests. The repository owner reviews external contributions and decides when to merge them. Please respond to review comments and keep the pull request focused.
 
+If you find a security issue, follow [SECURITY.md](SECURITY.md) so it can be reported privately.
+
 The optional contract smoke test uses a separately built `crap4csharp` CLI. See [test/e2e/README.md](test/e2e/README.md) for its setup; CI does not require that external build.

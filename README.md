@@ -42,3 +42,5 @@ Contributions are welcome through a fork, a branch, and a pull request to `main`
 ## License
 
 `crapide` is released under the [MIT License](LICENSE).
+
+Security issues can be reported privately as described in [SECURITY.md](SECURITY.md).
