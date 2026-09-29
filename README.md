@@ -34,3 +34,11 @@ For an optional real-CLI contract check, run `npm run test:contract -- /absolute
 The extension uses the Node workspace extension host, including remote workspace hosts. Browser and virtual workspaces are unsupported, as are untrusted workspaces.
 
 See [the implementation plan](docs/implementation-plan.md) for P3–P8 and [the architecture](docs/architecture.md) for the CLI boundary.
+
+## Contributing
+
+Contributions are welcome through a fork, a branch, and a pull request to `main`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and checks.
+
+## License
+
+`crapide` is released under the [MIT License](LICENSE).
