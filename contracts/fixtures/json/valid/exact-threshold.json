@@ -1,0 +1,13 @@
+{
+  "members": [
+    {
+      "name": "Demo.Sample.ExactlyEight",
+      "file": "src/Sample.cs",
+      "startLine": 1,
+      "endLine": 7,
+      "complexity": 3,
+      "coveragePercent": 17.79293085565099,
+      "crap": 8
+    }
+  ]
+}

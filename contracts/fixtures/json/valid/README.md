@@ -1,1 +1,5 @@
-Verified CLI output fixtures will be added in P3. No JSON examples are asserted as canonical yet.
+# Valid fixtures
+
+`empty.json` and `real-analysis.json` are stdout documents from a disposable CLI build of `crap4csharp` commit `064e2436b66251e66240f6ab77ced444670e1a22`, SHA-256 `dc172852634bc3e97b6b7c16d44926b4228075a75d4e678c9442d217e5d1410a`. The former used an empty directory; the latter used a one-project .NET 8 workspace with one xUnit test. Both runs returned exit `0`. The full metric provenance is in [the contract](../../../json-contract.md).
+
+The remaining files are source-verified consumer examples. `normal.json` and `over-threshold.json` mirror values in `CliApplicationTests.MachineReportsPreserveMetricsLocationsAndThresholdExits`; the all-null record in `nullable.json` mirrors `JsonReportFormatterTests.KeepsUnavailableMetricsAndLocationsNull`, while its partial-location record exercises independently nullable fields in `MethodMetrics`; `names.json` uses names verified by `JsonReportFormatterTests` and `CrapAnalyzerTests`; `exact-threshold.json` and `additive-fields.json` exercise valid serializer shapes without claiming a captured full CLI run. See [the contract](../../../json-contract.md) for precise provenance and constraints.

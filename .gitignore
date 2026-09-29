@@ -1,5 +1,7 @@
-# npm and TypeScript output
+# Build and dependency output
 **/node_modules/
+**/[Bb]in/
+**/[Oo]bj/
 extensions/vscode/dist/
 extensions/vscode/*.tsbuildinfo
 extensions/vscode/.vscode-test/
@@ -9,6 +11,7 @@ coverage/
 **/coverage/
 test-results/
 **/test-results/
+**/TestResults/
 *.lcov
 
 # Extension packages and logs

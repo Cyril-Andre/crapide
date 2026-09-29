@@ -1,0 +1,15 @@
+{
+  "members": [
+    {
+      "name": "Demo.Sample.Run",
+      "file": "/tmp/example/src/Sample.cs",
+      "startLine": 1,
+      "endLine": 2,
+      "complexity": 1,
+      "coveragePercent": 99.99999999999999,
+      "crap": 1.000000000000001,
+      "futureMemberField": { "ignored": true }
+    }
+  ],
+  "futureTopLevelField": 123
+}

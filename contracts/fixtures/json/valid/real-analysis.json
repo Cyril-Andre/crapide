@@ -1,0 +1,13 @@
+{
+  "members": [
+    {
+      "name": "Demo.Calculator.Abs",
+      "file": "src/Demo/Calculator.cs",
+      "startLine": 5,
+      "endLine": 13,
+      "complexity": 2,
+      "coveragePercent": 66.66666666666667,
+      "crap": 2.148148148148148
+    }
+  ]
+}
