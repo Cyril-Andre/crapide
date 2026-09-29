@@ -1,0 +1,31 @@
+{
+  "members": [
+    {
+      "name": "Demo.Sample.ZeroCoverage",
+      "file": "src/Sample.cs",
+      "startLine": 3,
+      "endLine": 5,
+      "complexity": 3,
+      "coveragePercent": 0,
+      "crap": 12
+    },
+    {
+      "name": "Demo.Sample.Unavailable",
+      "file": null,
+      "startLine": null,
+      "endLine": null,
+      "complexity": 2,
+      "coveragePercent": null,
+      "crap": null
+    },
+    {
+      "name": "Demo.Sample.PartialLocation",
+      "file": "src/Partial.cs",
+      "startLine": 8,
+      "endLine": null,
+      "complexity": 1,
+      "coveragePercent": 100,
+      "crap": 1
+    }
+  ]
+}

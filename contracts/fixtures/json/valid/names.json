@@ -1,0 +1,67 @@
+{
+  "members": [
+    {
+      "name": "Demo.Calc.Add",
+      "file": "src/Calc.cs",
+      "startLine": 10,
+      "endLine": 17,
+      "complexity": 2,
+      "coveragePercent": 0,
+      "crap": 6
+    },
+    {
+      "name": "Demo.Container`1.Read\"Value",
+      "file": "src/a # % café.cs",
+      "startLine": 4,
+      "endLine": 12,
+      "complexity": 3,
+      "coveragePercent": 75,
+      "crap": 3.140625
+    },
+    {
+      "name": "Demo.Widget.op_Addition",
+      "file": "src/Widget.cs",
+      "startLine": 20,
+      "endLine": 24,
+      "complexity": 1,
+      "coveragePercent": 0,
+      "crap": 2
+    },
+    {
+      "name": "Demo.Calc.Add",
+      "file": "src/Calc.cs",
+      "startLine": 5,
+      "endLine": 8,
+      "complexity": 1,
+      "coveragePercent": 100,
+      "crap": 1
+    },
+    {
+      "name": "Demo.Widget.get_Value",
+      "file": "src/Widget.cs",
+      "startLine": 3,
+      "endLine": 6,
+      "complexity": 1,
+      "coveragePercent": 100,
+      "crap": 1
+    },
+    {
+      "name": "Demo.Money.op_Implicit",
+      "file": "src/Money.cs",
+      "startLine": 7,
+      "endLine": 10,
+      "complexity": 1,
+      "coveragePercent": 100,
+      "crap": 1
+    },
+    {
+      "name": "Demo.Money.op_Implicit",
+      "file": "src/Money.cs",
+      "startLine": 14,
+      "endLine": 18,
+      "complexity": 1,
+      "coveragePercent": 100,
+      "crap": 1
+    }
+  ]
+}

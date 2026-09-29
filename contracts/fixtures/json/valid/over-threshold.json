@@ -1,0 +1,13 @@
+{
+  "members": [
+    {
+      "name": "demo.Sample.alpha",
+      "file": "src/Foo/Sample.cs",
+      "startLine": 4,
+      "endLine": 11,
+      "complexity": 3,
+      "coveragePercent": 0,
+      "crap": 12
+    }
+  ]
+}
