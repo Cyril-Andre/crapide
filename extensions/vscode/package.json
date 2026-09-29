@@ -1,0 +1,64 @@
+{
+  "name": "crapide-vscode",
+  "displayName": "CRAP IDE",
+  "description": "CRAP metric integration for VS Code and Cursor (bootstrap only)",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "crapide",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "CRAP analysis requires a file-backed workspace and an external CLI."
+    },
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "CRAP analysis runs an external CLI and project tests."
+    }
+  },
+  "main": "./dist/src/extension.js",
+  "activationEvents": [
+    "onCommand:crapide.analyzeWorkspace"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "crapide.analyzeWorkspace",
+        "title": "CRAP: Analyze Workspace"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit",
+    "lint": "eslint src test",
+    "format:check": "prettier --check src test eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
+    "format": "prettier --write src test eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
+    "check": "npm run typecheck && npm run lint && npm run format:check",
+    "test": "npm run build && vscode-test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.6.3",
+    "@types/vscode": "1.100.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "eslint": "^10.11.0",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0"
+  },
+  "overrides": {
+    "diff": "8.0.3",
+    "serialize-javascript": "7.0.5"
+  }
+}
