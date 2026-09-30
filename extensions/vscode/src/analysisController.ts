@@ -151,6 +151,8 @@ export class AnalysisController implements vscode.Disposable {
     work: (signal: AbortSignal) => Promise<void>,
   ) => Promise<void>;
   private readonly snapshots = new Map<string, FolderSnapshot>();
+  private readonly snapshotsChanged = new vscode.EventEmitter<void>();
+  readonly onDidChangeSnapshots = this.snapshotsChanged.event;
   private readonly diagnosticsByFolder = new Map<
     string,
     Map<string, readonly vscode.Diagnostic[]>
@@ -177,10 +179,28 @@ export class AnalysisController implements vscode.Disposable {
     return this.snapshots.get(folder.toString());
   }
 
+  membersForDocument(document: vscode.Uri): readonly ResolvedMember[] {
+    if (document.scheme !== 'file') return [];
+    const uri = document.toString();
+    const members: ResolvedMember[] = [];
+    for (const snapshot of this.snapshots.values()) {
+      for (const resolved of snapshot.members) {
+        if (
+          resolved.location !== null &&
+          vscode.Uri.file(resolved.location.filePath).toString() === uri
+        ) {
+          members.push(resolved);
+        }
+      }
+    }
+    return members;
+  }
+
   private clearFolder(folderKey: string): number {
     const nextGeneration = (this.generations.get(folderKey) ?? 0) + 1;
     this.generations.set(folderKey, nextGeneration);
     this.snapshots.delete(folderKey);
+    this.snapshotsChanged.fire();
     const old = this.diagnosticsByFolder.get(folderKey);
     this.diagnosticsByFolder.delete(folderKey);
     for (const uri of old?.keys() ?? []) this.refreshUri(uri);
@@ -199,6 +219,7 @@ export class AnalysisController implements vscode.Disposable {
 
   private publish(folderKey: string, snapshot: FolderSnapshot): void {
     this.snapshots.set(folderKey, snapshot);
+    this.snapshotsChanged.fire();
     const byUri = new Map<string, vscode.Diagnostic[]>();
     for (const resolved of snapshot.members) {
       const diagnostic = diagnosticFor(resolved);
@@ -334,6 +355,7 @@ export class AnalysisController implements vscode.Disposable {
 
   dispose(): void {
     this.command.dispose();
+    this.snapshotsChanged.dispose();
     this.diagnostics.dispose();
     if (this.ownsOutput) this.output.dispose();
     this.snapshots.clear();

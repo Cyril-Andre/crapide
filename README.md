@@ -1,6 +1,6 @@
 # crapide
 
-`crapide` is the future set of IDE adapters for the external `crap4csharp` CLI. The first package targets desktop VS Code and Cursor. **CRAP: Analyze Workspace** now runs the installed CLI on explicit request and shows methods over the CRAP threshold in Problems.
+`crapide` is the future set of IDE adapters for the external `crap4csharp` CLI. The first package targets desktop VS Code and Cursor. **CRAP: Analyze Workspace** runs the installed CLI on explicit request, shows methods over the CRAP threshold in Problems, and displays member metrics through CodeLens.
 
 ## Project layout
 
@@ -25,15 +25,17 @@ npm run check
 npm test
 ```
 
-`check` runs TypeScript validation, ESLint, and Prettier validation. `test` builds the extension, runs the Node tests, and launches activation and diagnostic tests in a VS Code Extension Development Host. The test runner may download VS Code into an ignored `.vscode-test/` directory.
+`check` runs TypeScript validation, ESLint, and Prettier validation. `test` builds the extension, runs the Node tests, and launches activation, diagnostic, and CodeLens tests in a VS Code Extension Development Host. The test runner may download VS Code into an ignored `.vscode-test/` directory.
 
 `npm run test:unit` runs the JSON parser, process-runner, and path-resolution tests without a VS Code host or real CLI. The runner accepts an explicit native executable or prebuilt `.dll`, or searches for `crap4csharp` on `PATH`. It always passes `--format json` as separate arguments, treats exit `0` and `2` as usable only with valid JSON, and reports all incomplete runs as failures. It serializes runs per invocation directory. On cancellation or output overflow, it kills the process group on POSIX or uses `taskkill /T /F` on Windows to stop descendants such as `dotnet test`. Fixture provenance and accepted fields are in [the JSON contract](contracts/json-contract.md).
 
-## Manual analysis (P5)
+## Manual analysis and CodeLens (P5–P6)
 
 Install a prebuilt JSON-capable `crap4csharp` CLI on the workspace host. Set `crapide.cliPath` to its executable or `.dll` path for each workspace folder; leave it empty to find `crap4csharp` on `PATH`. For a `.dll`, set `crapide.dotnetPath` if `dotnet` is not on `PATH`. Open a trusted, file-backed folder containing `src/`, then run **CRAP: Analyze Workspace**. The extension runs the CLI once per workspace folder, so a folder whose source spans multiple owning projects is rejected by the CLI.
 
-The CLI runs target tests and replaces `coverage/` in its invocation folder. The extension asks for confirmation each time that directory already exists. The command clears old findings when a folder starts, then publishes Warning diagnostics for located members whose supplied CRAP score is strictly above `8.0`. Missing, escaped, or stale source locations are left out of Problems and reported in the **CRAP IDE** output channel. A failed or cancelled run leaves that folder without findings; other workspace folders retain their results. CodeLens and navigation are scheduled for P6.
+The CLI runs target tests and replaces `coverage/` in its invocation folder. The extension asks for confirmation each time that directory already exists. The command clears old findings when a folder starts, then publishes Warning diagnostics for located members whose supplied CRAP score is strictly above `8.0`. Missing, escaped, or stale source locations are left out of Problems and reported in the **CRAP IDE** output channel. A failed or cancelled run leaves that folder without findings; other workspace folders retain their results.
+
+After an analysis, C# files show CodeLens links at each located member's reported start line. Each link displays the CLI's CRAP score, cyclomatic complexity (CC), and coverage; missing values read `N/A`. Click a link to open that file at the start line. Multiple members on one line retain separate links, identified by name and ordinal. CodeLens reads the saved result only and refreshes when analysis results change. The CLI provides no columns, so links and navigation use column 0. Editing a file does not rerun analysis; run **CRAP: Analyze Workspace** again to refresh its metrics and locations.
 
 For an optional real-CLI contract check, run `npm run test:contract -- /absolute/path/to/Microsoft.Crap4CSharp.dll` from `extensions/vscode/`. It analyzes a disposable C# fixture and compares the JSON member values with the checked-in real-run fixture. See [test/e2e](test/e2e/README.md).
 
@@ -41,7 +43,7 @@ For a lightweight P4 launch check, run `npm run test:runner-smoke -- /absolute/p
 
 The extension uses the Node workspace extension host, including remote workspace hosts. Browser and virtual workspaces are unsupported, as are untrusted workspaces.
 
-See [the implementation plan](docs/implementation-plan.md) for P5–P8 and [the architecture](docs/architecture.md) for the CLI boundary.
+See [the implementation plan](docs/implementation-plan.md) for P6–P8 and [the architecture](docs/architecture.md) for the CLI boundary.
 
 ## Contributing
 
