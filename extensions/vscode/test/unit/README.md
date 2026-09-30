@@ -1,1 +1,1 @@
-The JSON parser and process-runner tests use Node's built-in test runner. Parser tests use the shared contract fixtures; process tests use temporary stand-in scripts. Run `npm run test:unit` from `extensions/vscode/`; neither VS Code nor the real CLI is required.
+The JSON parser, process-runner and source-location tests use Node's built-in test runner. Parser tests use the shared contract fixtures; process and location tests use temporary files. Run `npm run test:unit` from `extensions/vscode/`; neither VS Code nor the real CLI is required.

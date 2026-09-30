@@ -1,7 +1,7 @@
 {
   "name": "crapide-vscode",
   "displayName": "CRAP IDE",
-  "description": "CRAP metric integration for VS Code and Cursor (bootstrap only)",
+  "description": "CRAP metric diagnostics for VS Code and Cursor",
   "version": "0.0.1",
   "license": "MIT",
   "private": true,
@@ -30,6 +30,23 @@
     "onCommand:crapide.analyzeWorkspace"
   ],
   "contributes": {
+    "configuration": {
+      "title": "CRAP IDE",
+      "properties": {
+        "crapide.cliPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Path to a prebuilt crap4csharp executable or .dll. Leave empty to find crap4csharp on PATH."
+        },
+        "crapide.dotnetPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Path to dotnet for a .dll CLI. Leave empty to find dotnet on PATH."
+        }
+      }
+    },
     "commands": [
       {
         "command": "crapide.analyzeWorkspace",
