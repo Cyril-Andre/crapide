@@ -1,6 +1,6 @@
 # `crapide` incremental implementation plan
 
-Status: P1–P5 merged; P6 implemented on `codex/p6-codelens` for review. The steps below apply to the existing `crapide` project root, separate from `crap4csharp`. Read [architecture.md](architecture.md) and ADRs [001](adr/001-repository-structure.md), [002](adr/002-cross-ide-sharing.md), [003](adr/003-crap4csharp-integration.md) first. `crap4csharp` remains an external tool; its JSON output was verified against a prebuilt CLI in P3 and P4. The maintainer manages Git for `crapide`; these phases do not require changes to `crap4csharp`.
+Status: P1–P6 merged; P7 implemented on `Phase-P7` for review. The steps below apply to the existing `crapide` project root, separate from `crap4csharp`. Read [architecture.md](architecture.md) and ADRs [001](adr/001-repository-structure.md), [002](adr/002-cross-ide-sharing.md), [003](adr/003-crap4csharp-integration.md) first. `crap4csharp` remains an external tool; its JSON output was verified against a prebuilt CLI in P3, P4 and P7. The maintainer manages Git for `crapide`; these phases do not require changes to `crap4csharp`.
 
 ## Phase map
 

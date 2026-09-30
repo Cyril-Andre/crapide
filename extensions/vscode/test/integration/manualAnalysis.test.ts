@@ -81,14 +81,25 @@ function controller(
     trusted?: boolean;
     confirmCoverage?: boolean;
     notices?: { level: NoticeLevel; message: string }[];
+    executableForFolder?: (folder: vscode.WorkspaceFolder) => {
+      cliPath?: string;
+      dotnetPath?: string;
+    };
+    outputText?: { value: string };
   } = {},
 ): { commandId: string; controller: AnalysisController } {
   const commandId = `crapide.test.p5.${nextCommand++}`;
   const output = {
     name: 'CRAP IDE test',
-    append: () => undefined,
-    appendLine: () => undefined,
-    replace: () => undefined,
+    append: (value: string) => {
+      if (options.outputText) options.outputText.value += value;
+    },
+    appendLine: (value: string) => {
+      if (options.outputText) options.outputText.value += `${value}\n`;
+    },
+    replace: (value: string) => {
+      if (options.outputText) options.outputText.value = value;
+    },
     clear: () => undefined,
     show: () => undefined,
     hide: () => undefined,
@@ -104,12 +115,178 @@ function controller(
       confirmCoverage: async () => options.confirmCoverage ?? true,
       notify: (level, message) => options.notices?.push({ level, message }),
       output,
+      executableForFolder: options.executableForFolder,
       withCancellation: async (work) => work(new AbortController().signal),
     }),
   };
 }
 
 suite('P5 manual analysis', () => {
+  test('reads changed VS Code settings for each command run', async () => {
+    const fixture = workspace();
+    const runner = new FakeRunner(() => success([]));
+    const registered = controller([fixture.folder], runner);
+    const configuration = vscode.workspace.getConfiguration('crapide');
+    const previous = configuration.inspect<string>('cliPath')?.globalValue;
+    try {
+      await configuration.update(
+        'cliPath',
+        '/first/tool.dll',
+        vscode.ConfigurationTarget.Global,
+      );
+      await vscode.commands.executeCommand(registered.commandId);
+      await configuration.update(
+        'cliPath',
+        '/second/tool.dll',
+        vscode.ConfigurationTarget.Global,
+      );
+      await vscode.commands.executeCommand(registered.commandId);
+      assert.deepEqual(
+        runner.calls.map((call) => call.executable.cliPath),
+        ['/first/tool.dll', '/second/tool.dll'],
+      );
+    } finally {
+      await configuration.update(
+        'cliPath',
+        previous,
+        vscode.ConfigurationTarget.Global,
+      );
+      registered.controller.dispose();
+      fixture.dispose();
+    }
+  });
+
+  test('uses each folder setting on the next run and reports a concise summary', async () => {
+    const first = workspace();
+    const second = workspace();
+    const notices: { level: NoticeLevel; message: string }[] = [];
+    const outputText = { value: '' };
+    const settings = new Map([
+      [
+        first.folder.uri.toString(),
+        { cliPath: '/cli/first.dll', dotnetPath: '/runtime/dotnet' },
+      ],
+      [second.folder.uri.toString(), { cliPath: '/cli/second' }],
+    ]);
+    const runner = new FakeRunner(() =>
+      success([member(), member({ file: null, crap: 20 })]),
+    );
+    const registered = controller([first.folder, second.folder], runner, {
+      notices,
+      outputText,
+      executableForFolder: (folder) =>
+        settings.get(folder.uri.toString()) ?? {},
+    });
+    try {
+      await vscode.commands.executeCommand(registered.commandId);
+      assert.deepEqual(
+        runner.calls.map((call) => call.executable),
+        [
+          { cliPath: '/cli/first.dll', dotnetPath: '/runtime/dotnet' },
+          { cliPath: '/cli/second' },
+        ],
+      );
+      assert.match(outputText.value, /2 analyzed, 1 findings, 1 unlocated/);
+      assert.ok(
+        notices.some(
+          (notice) =>
+            notice.level === 'warning' && /2 analyzed/.test(notice.message),
+        ),
+      );
+      settings.set(first.folder.uri.toString(), {
+        cliPath: '/cli/updated.dll',
+        dotnetPath: '/runtime/dotnet',
+      });
+      await vscode.commands.executeCommand(registered.commandId);
+      assert.equal(runner.calls[2].executable.cliPath, '/cli/updated.dll');
+    } finally {
+      registered.controller.dispose();
+      first.dispose();
+      second.dispose();
+    }
+  });
+
+  test('reports distinct installation and protocol failures', async () => {
+    const fixture = workspace();
+    const notices: { level: NoticeLevel; message: string }[] = [];
+    let outcome: AnalysisOutcome = {
+      ok: false,
+      kind: 'unsupported-format',
+      stderr: 'Unknown option --format',
+    };
+    const registered = controller(
+      [fixture.folder],
+      new FakeRunner(() => outcome),
+      { notices },
+    );
+    try {
+      for (const [next, pattern] of [
+        [{ ok: false, kind: 'unsupported-format', stderr: '' }, /JSON-capable/],
+        [
+          { ok: false, kind: 'protocol', stderr: '' },
+          /malformed or incompatible JSON/,
+        ],
+        [
+          { ok: false, kind: 'missing-runtime', stderr: '' },
+          /dotnet was not found/,
+        ],
+        [{ ok: false, kind: 'missing-sdk', stderr: '' }, /required \.NET SDK/],
+        [
+          {
+            ok: false,
+            kind: 'configuration',
+            stderr: '',
+            detail: 'crapide.cliPath must point to an existing file',
+          },
+          /crapide\.cliPath/,
+        ],
+        [
+          {
+            ok: false,
+            kind: 'fatal-exit',
+            stderr: 'Coverage command failed with exit 1',
+          },
+          /test or coverage command failed/,
+        ],
+        [
+          {
+            ok: false,
+            kind: 'fatal-exit',
+            stderr: 'No coverage report was produced',
+          },
+          /coverage output is missing/,
+        ],
+      ] as const) {
+        outcome = next as AnalysisOutcome;
+        await vscode.commands.executeCommand(registered.commandId);
+        assert.match(notices.at(-1)?.message ?? '', pattern);
+      }
+    } finally {
+      registered.controller.dispose();
+      fixture.dispose();
+    }
+  });
+
+  test('bounds accumulated output across repeated runs', async () => {
+    const fixture = workspace();
+    const outputText = { value: '' };
+    const runner = new FakeRunner(() => ({
+      ok: false,
+      kind: 'fatal-exit',
+      stderr: 'x'.repeat(200_000),
+      exitCode: 1,
+    }));
+    const registered = controller([fixture.folder], runner, { outputText });
+    try {
+      await vscode.commands.executeCommand(registered.commandId);
+      await vscode.commands.executeCommand(registered.commandId);
+      assert.ok(outputText.value.length <= 256 * 1024);
+      assert.match(outputText.value, /Earlier CRAP IDE output truncated/);
+    } finally {
+      registered.controller.dispose();
+      fixture.dispose();
+    }
+  });
   test('exit 2 publishes only located CRAP > 8 while retaining all records', async () => {
     const fixture = workspace();
     const runner = new FakeRunner(() =>
@@ -142,9 +319,7 @@ suite('P5 manual analysis', () => {
       );
       assert.equal(problems[0].severity, vscode.DiagnosticSeverity.Warning);
       assert.equal(problems[0].range.start.line, 0);
-      assert.ok(
-        notices.some((notice) => /could not be located/.test(notice.message)),
-      );
+      assert.ok(notices.some((notice) => /1 unlocated/.test(notice.message)));
     } finally {
       registered.controller.dispose();
       fixture.dispose();

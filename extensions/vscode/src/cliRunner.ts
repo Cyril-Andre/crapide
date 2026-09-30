@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { accessSync, constants, statSync } from 'node:fs';
 import * as path from 'node:path';
 import {
   parseJsonReport,
@@ -58,6 +59,8 @@ export type AnalysisOutcome =
         | 'spawn'
         | 'missing-cli'
         | 'missing-runtime'
+        | 'unsupported-format'
+        | 'missing-sdk'
         | 'fatal-exit'
         | 'unexpected-exit'
         | 'protocol'
@@ -91,6 +94,38 @@ export function buildInvocation(request: AnalysisRequest): Invocation {
   return { command: cli, args: ['--format', 'json'], cwd };
 }
 
+/** An explicit setting must name a usable file; it never silently falls back to PATH. */
+export function validateExecutable(request: AnalysisRequest): void {
+  const { cliPath, dotnetPath } = request.executable;
+  const check = (configured: string, setting: string, executable: boolean) => {
+    const resolved = path.resolve(request.cwd, configured);
+    try {
+      if (!statSync(resolved).isFile()) throw new Error('not a file');
+      accessSync(
+        resolved,
+        executable && process.platform !== 'win32'
+          ? constants.X_OK
+          : constants.R_OK,
+      );
+    } catch {
+      throw new Error(
+        `${setting} must point to an existing ${executable ? 'executable' : 'file'}: ${resolved}`,
+      );
+    }
+  };
+  if (cliPath !== undefined) {
+    check(cliPath, 'crapide.cliPath', !cliPath.toLowerCase().endsWith('.dll'));
+    if (cliPath.toLowerCase().endsWith('.dll') && dotnetPath !== undefined)
+      check(dotnetPath, 'crapide.dotnetPath', true);
+  }
+}
+
+function unsupportedFormat(stderr: string): boolean {
+  return /(?:unknown|unrecognized|unsupported|invalid|unexpected)\s+(?:option|argument).*?(?:--format|format)|(?:--format|format).*?(?:unknown|unrecognized|unsupported|invalid|unexpected)/i.test(
+    stderr,
+  );
+}
+
 export class CliRunner {
   private readonly pending = new Map<string, Promise<void>>();
 
@@ -120,6 +155,7 @@ export class CliRunner {
     let invocation: Invocation;
     try {
       invocation = buildInvocation(request);
+      validateExecutable(request);
     } catch (error) {
       return {
         ok: false,
@@ -156,6 +192,25 @@ export class CliRunner {
         detail: process.error,
       };
     }
+    if (process.code === 1 && unsupportedFormat(process.stderr))
+      return {
+        ok: false,
+        kind: 'unsupported-format',
+        stderr: process.stderr,
+        exitCode: process.code,
+      };
+    if (
+      process.code === 1 &&
+      /compatible \.NET SDK was not found|requested SDK version|SDK specified in global\.json/i.test(
+        process.stderr,
+      )
+    )
+      return {
+        ok: false,
+        kind: 'missing-sdk',
+        stderr: process.stderr,
+        exitCode: process.code,
+      };
     if (process.code === 1)
       return {
         ok: false,

@@ -28,6 +28,10 @@ export interface AnalysisControllerOptions {
   ) => Promise<boolean>;
   readonly notify?: (level: NoticeLevel, message: string) => void;
   readonly output?: vscode.OutputChannel;
+  readonly executableForFolder?: (folder: vscode.WorkspaceFolder) => {
+    cliPath?: string;
+    dotnetPath?: string;
+  };
   readonly withCancellation?: (
     work: (signal: AbortSignal) => Promise<void>,
   ) => Promise<void>;
@@ -92,6 +96,10 @@ function failureMessage(
       return `${prefix}crap4csharp was not found. Set crapide.cliPath or install the CLI on PATH.`;
     case 'missing-runtime':
       return `${prefix}dotnet was not found. Set crapide.dotnetPath or install .NET.`;
+    case 'missing-sdk':
+      return `${prefix}the required .NET SDK is unavailable. Check global.json and installed SDKs (dotnet --list-sdks); see the CRAP IDE output.`;
+    case 'unsupported-format':
+      return `${prefix}this CLI does not support --format json. Install a JSON-capable crap4csharp build and update crapide.cliPath.`;
     case 'fatal-exit':
       if (/span multiple projects/i.test(outcome.stderr))
         return `${prefix}the folder spans multiple C# projects. Analyze a folder with one owning project.`;
@@ -99,15 +107,27 @@ function failureMessage(
         return `${prefix}no matching test project was found. Check the CLI's test-project requirements.`;
       if (/no owning project/i.test(outcome.stderr))
         return `${prefix}a source file has no owning .csproj inside the folder.`;
-      return `${prefix}the CLI exited with code 1. Check the CRAP IDE output for test or coverage details.`;
+      if (
+        /coverage command failed|test run failed|Échec de l'exécution des tests/i.test(
+          outcome.stderr,
+        )
+      )
+        return `${prefix}the test or coverage command failed. Fix the test run shown in the CRAP IDE output and retry.`;
+      if (
+        /no coverage report|multiple coverage reports|no coverage data/i.test(
+          outcome.stderr,
+        )
+      )
+        return `${prefix}coverage output is missing or unsupported. Check the test project's coverlet.collector setup and the CRAP IDE output.`;
+      return `${prefix}the CLI exited with code 1. Check failing tests, coverage generation and the CRAP IDE output.`;
     case 'protocol':
-      return `${prefix}the CLI did not return compatible JSON. Check that it supports --format json.`;
+      return `${prefix}the CLI returned malformed or incompatible JSON. Check the CRAP IDE output and CLI version.`;
     case 'output-limit':
       return `${prefix}CLI output exceeded the capture limit. Check the CRAP IDE output.`;
     case 'cancelled':
       return `CRAP analysis cancelled for ${folder.name}.`;
     case 'configuration':
-      return `${prefix}the CLI path or invocation directory is invalid.`;
+      return `${prefix}${outcome.detail ?? 'the CLI path or invocation directory is invalid.'}`;
     case 'spawn':
       return `${prefix}the CLI could not be started. Check its path and permissions.`;
     case 'unexpected-exit':
@@ -150,6 +170,11 @@ export class AnalysisController implements vscode.Disposable {
   private readonly withCancellation: (
     work: (signal: AbortSignal) => Promise<void>,
   ) => Promise<void>;
+  private readonly executableForFolder: (folder: vscode.WorkspaceFolder) => {
+    cliPath?: string;
+    dotnetPath?: string;
+  };
+  private outputText = '';
   private readonly snapshots = new Map<string, FolderSnapshot>();
   private readonly snapshotsChanged = new vscode.EventEmitter<void>();
   readonly onDidChangeSnapshots = this.snapshotsChanged.event;
@@ -168,6 +193,21 @@ export class AnalysisController implements vscode.Disposable {
     this.confirmCoverage = options.confirmCoverage ?? defaultConfirmCoverage;
     this.notify = options.notify ?? defaultNotice;
     this.withCancellation = options.withCancellation ?? defaultWithCancellation;
+    this.executableForFolder =
+      options.executableForFolder ??
+      ((folder) => {
+        const configuration = vscode.workspace.getConfiguration(
+          'crapide',
+          folder.uri,
+        );
+        const configuredCli = configuration.get<string>('cliPath') ?? '';
+        const configuredDotnet = configuration.get<string>('dotnetPath') ?? '';
+        return {
+          cliPath: configuredCli === '' ? undefined : configuredCli.trim(),
+          dotnetPath:
+            configuredDotnet === '' ? undefined : configuredDotnet.trim(),
+        };
+      });
     this.diagnostics = vscode.languages.createDiagnosticCollection(commandId);
     this.ownsOutput = options.output === undefined;
     this.output =
@@ -177,6 +217,23 @@ export class AnalysisController implements vscode.Disposable {
 
   snapshotFor(folder: vscode.Uri): FolderSnapshot | undefined {
     return this.snapshots.get(folder.toString());
+  }
+
+  private appendOutput(value: string): void {
+    const limit = 256 * 1024;
+    const marker = '[Earlier CRAP IDE output truncated]\n';
+    this.outputText += value;
+    if (this.outputText.length > limit) {
+      this.outputText =
+        marker + this.outputText.slice(-(limit - marker.length));
+      this.output.replace(this.outputText);
+    } else {
+      this.output.append(value);
+    }
+  }
+
+  private appendOutputLine(value: string): void {
+    this.appendOutput(`${value}\n`);
   }
 
   membersForDocument(document: vscode.Uri): readonly ResolvedMember[] {
@@ -266,25 +323,21 @@ export class AnalysisController implements vscode.Disposable {
       }
     }
 
-    const configuration = vscode.workspace.getConfiguration(
-      'crapide',
-      folder.uri,
-    );
-    const cliPath = configuration.get<string>('cliPath')?.trim() || undefined;
-    const dotnetPath =
-      configuration.get<string>('dotnetPath')?.trim() || undefined;
-    this.output.appendLine(`=== ${folder.name} ===`);
+    const executable = this.executableForFolder(folder);
+    this.appendOutputLine(`=== ${folder.name} ===`);
     const outcome = await this.runner.run({
       cwd,
-      executable: { cliPath, dotnetPath },
+      executable,
       signal,
     });
-    if (outcome.stderr) this.output.append(outcome.stderr);
+    if (outcome.stderr) this.appendOutput(outcome.stderr);
     if (this.generations.get(folderKey) !== generation) return;
     if (!outcome.ok) {
-      if (outcome.detail) this.output.appendLine(outcome.detail);
+      if (outcome.detail) this.appendOutputLine(outcome.detail);
       const level = outcome.kind === 'cancelled' ? 'info' : 'error';
-      this.notify(level, failureMessage(folder, outcome));
+      const message = failureMessage(folder, outcome);
+      this.appendOutputLine(message);
+      this.notify(level, message);
       if (level === 'error') this.output.show(true);
       return;
     }
@@ -293,7 +346,7 @@ export class AnalysisController implements vscode.Disposable {
     try {
       snapshot = resolveReport(outcome.report, cwd, outcome.thresholdExceeded);
     } catch (error) {
-      this.output.appendLine(String(error));
+      this.appendOutputLine(String(error));
       this.notify(
         'error',
         `CRAP analysis could not read source files in ${folder.name}.`,
@@ -307,19 +360,27 @@ export class AnalysisController implements vscode.Disposable {
     const unlocated = snapshot.members.filter(
       (member) => member.location === null,
     );
+    const findings = snapshot.members.filter(
+      (member) =>
+        member.location !== null &&
+        member.member.crap !== null &&
+        member.member.crap > 8,
+    ).length;
+    const summary = `CRAP analysis for ${folder.name}: ${snapshot.members.length} analyzed, ${findings} findings, ${unlocated.length} unlocated.`;
+    this.appendOutputLine(summary);
+    this.notify(
+      unlocated.length > 0 ? 'warning' : 'info',
+      unlocated.length > 0 ? `${summary} See the CRAP IDE output.` : summary,
+    );
     if (unlocated.length > 0) {
-      this.output.appendLine(
+      this.appendOutputLine(
         `${unlocated.length} member(s) could not be located in ${folder.name}:`,
       );
       for (const item of unlocated) {
-        this.output.appendLine(
+        this.appendOutputLine(
           `- ${item.member.name}: ${item.unlocatedReason ?? 'unknown reason'}`,
         );
       }
-      this.notify(
-        'warning',
-        `${unlocated.length} CRAP member(s) could not be located in ${folder.name}; see the CRAP IDE output.`,
-      );
     }
   }
 

@@ -1,4 +1,6 @@
 import * as assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { test } from 'node:test';
 import {
@@ -111,6 +113,27 @@ for (const [processResult, failure] of [
   [
     {
       kind: 'exited',
+      code: 1,
+      signal: null,
+      stdout: '',
+      stderr: 'Unknown option: --format',
+    },
+    'unsupported-format',
+  ],
+  [
+    {
+      kind: 'exited',
+      code: 1,
+      signal: null,
+      stdout: '',
+      stderr:
+        'A compatible .NET SDK was not found. Requested SDK version: 8.0.406',
+    },
+    'missing-sdk',
+  ],
+  [
+    {
+      kind: 'exited',
       code: 2,
       signal: null,
       stdout: '{"members":{}}',
@@ -133,15 +156,26 @@ for (const [processResult, failure] of [
   });
 }
 
-for (const [cliPath, kind] of [
-  ['/missing/tool', 'missing-cli'],
-  ['/missing/tool.dll', 'missing-runtime'],
-] as const) {
-  test(`distinguishes ${kind} from other spawn errors`, async () => {
+test('distinguishes missing CLI on PATH from other spawn errors', async () => {
+  const fake = new FakeProcess({
+    kind: 'spawn',
+    stderr: '',
+    error: 'spawn ENOENT',
+    errorCode: 'ENOENT',
+  });
+  const result = await new CliRunner(fake).run({ cwd, executable: {} });
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.kind, 'missing-cli');
+});
+
+test('distinguishes missing dotnet on PATH for an existing DLL', async () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'crapide-p7-'));
+  const cliPath = path.join(root, 'tool.dll');
+  writeFileSync(cliPath, '');
+  try {
     const fake = new FakeProcess({
       kind: 'spawn',
       stderr: '',
-      error: 'spawn ENOENT',
       errorCode: 'ENOENT',
     });
     const result = await new CliRunner(fake).run({
@@ -149,9 +183,59 @@ for (const [cliPath, kind] of [
       executable: { cliPath },
     });
     assert.equal(result.ok, false);
-    if (!result.ok) assert.equal(result.kind, kind);
+    if (!result.ok) assert.equal(result.kind, 'missing-runtime');
+    assert.deepEqual(fake.calls[0].args, [cliPath, '--format', 'json']);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects an invalid explicit CLI without falling back to PATH', async () => {
+  const fake = new FakeProcess({
+    kind: 'exited',
+    code: 0,
+    signal: null,
+    stdout: validJson,
+    stderr: '',
   });
-}
+  const result = await new CliRunner(fake).run({
+    cwd,
+    executable: { cliPath: '/missing/tool' },
+  });
+  assert.equal(result.ok, false);
+  if (!result.ok) {
+    assert.equal(result.kind, 'configuration');
+    assert.match(result.detail ?? '', /crapide\.cliPath/);
+  }
+  assert.equal(fake.calls.length, 0);
+});
+
+test('rejects an invalid explicit dotnet executable for a DLL', async () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'crapide-p7-'));
+  const cliPath = path.join(root, 'tool.dll');
+  writeFileSync(cliPath, '');
+  try {
+    const fake = new FakeProcess({
+      kind: 'exited',
+      code: 0,
+      signal: null,
+      stdout: validJson,
+      stderr: '',
+    });
+    const result = await new CliRunner(fake).run({
+      cwd,
+      executable: { cliPath, dotnetPath: '/missing/dotnet' },
+    });
+    assert.equal(result.ok, false);
+    if (!result.ok) {
+      assert.equal(result.kind, 'configuration');
+      assert.match(result.detail ?? '', /crapide\.dotnetPath/);
+    }
+    assert.equal(fake.calls.length, 0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 test('rejects an empty explicit path before spawning', async () => {
   const fake = new FakeProcess({
