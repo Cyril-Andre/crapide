@@ -1,11 +1,6 @@
 import * as vscode from 'vscode';
+import { AnalysisController } from './analysisController';
 
 export function activate(context: vscode.ExtensionContext): void {
-  context.subscriptions.push(
-    vscode.commands.registerCommand('crapide.analyzeWorkspace', async () => {
-      await vscode.window.showInformationMessage(
-        'CRAP: Analyze Workspace is not implemented yet.',
-      );
-    }),
-  );
+  context.subscriptions.push(new AnalysisController());
 }
