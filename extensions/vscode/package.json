@@ -37,13 +37,13 @@
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Path to a prebuilt crap4csharp executable or .dll. Leave empty to find crap4csharp on PATH."
+          "description": "Path to a prebuilt crap4csharp native executable or .dll, resolved relative to this workspace folder. Leave empty to find crap4csharp on the workspace host PATH."
         },
         "crapide.dotnetPath": {
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Path to dotnet for a .dll CLI. Leave empty to find dotnet on PATH."
+          "description": "Path to the dotnet executable when crapide.cliPath is a .dll, resolved relative to this workspace folder. Leave empty to find dotnet on the workspace host PATH."
         }
       }
     },
@@ -65,7 +65,8 @@
     "test:unit": "npm run build && npm run test:unit:built",
     "test:unit:built": "node --test dist/test/unit/*.test.js",
     "test:contract": "npm run build && node ../../test/e2e/json-contract-smoke.cjs",
-    "test:runner-smoke": "npm run build && node ../../test/e2e/cli-runner-smoke.cjs"
+    "test:runner-smoke": "npm run build && node ../../test/e2e/cli-runner-smoke.cjs",
+    "test:p7-real-cli": "npm run build && node ../../test/e2e/p7-real-cli.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
