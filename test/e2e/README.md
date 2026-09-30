@@ -1,5 +1,13 @@
 # Optional real CLI contract smoke test
 
+The lightweight P4 runner smoke test launches a prebuilt DLL from an empty disposable directory. It verifies the process adapter and JSON protocol without running target tests or coverage:
+
+```sh
+npm run test:runner-smoke -- /absolute/path/to/Microsoft.Crap4CSharp.dll
+```
+
+Run this command from `extensions/vscode/` after `npm ci`.
+
 From `extensions/vscode/`, after `npm ci`, run:
 
 ```sh

@@ -41,13 +41,14 @@
     "build": "tsc -p .",
     "typecheck": "tsc -p . --noEmit",
     "lint": "eslint src test",
-    "format:check": "prettier --config .prettierrc.json --check src test ../../test/e2e/json-contract-smoke.cjs eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
-    "format": "prettier --config .prettierrc.json --write src test ../../test/e2e/json-contract-smoke.cjs eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
+    "format:check": "prettier --config .prettierrc.json --check src test ../../test/e2e/*.cjs eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
+    "format": "prettier --config .prettierrc.json --write src test ../../test/e2e/*.cjs eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
     "check": "npm run typecheck && npm run lint && npm run format:check",
     "test": "npm run build && npm run test:unit:built && vscode-test",
     "test:unit": "npm run build && npm run test:unit:built",
     "test:unit:built": "node --test dist/test/unit/*.test.js",
-    "test:contract": "npm run build && node ../../test/e2e/json-contract-smoke.cjs"
+    "test:contract": "npm run build && node ../../test/e2e/json-contract-smoke.cjs",
+    "test:runner-smoke": "npm run build && node ../../test/e2e/cli-runner-smoke.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
