@@ -93,3 +93,15 @@ jobs:
           name: crapide-vscode-0.1.0
           path: extensions/vscode/crapide-vscode-0.1.0.vsix
           if-no-files-found: error
+
+  required:
+    name: checks
+    if: ${{ always() }}
+    needs: [checks, extension-host, package]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify all P8 jobs passed
+        run: |
+          test '${{ needs.checks.result }}' = success
+          test '${{ needs.extension-host.result }}' = success
+          test '${{ needs.package.result }}' = success
