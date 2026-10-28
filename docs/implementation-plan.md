@@ -1,6 +1,6 @@
 # `crapide` incremental implementation plan
 
-Status: P1–P7 merged; P8 preview packaging and automated verification implemented on `Phase-P8`, with remaining manual and upstream release checks recorded in [compatibility-and-release.md](compatibility-and-release.md). The steps below apply to the existing `crapide` project root, separate from `crap4csharp`. Read [architecture.md](architecture.md) and ADRs [001](adr/001-repository-structure.md), [002](adr/002-cross-ide-sharing.md), [003](adr/003-crap4csharp-integration.md) first. `crap4csharp` remains an external tool; its JSON output was verified against a prebuilt CLI in P3, P4 and P7. The maintainer manages Git for `crapide`; these phases do not require changes to `crap4csharp`.
+Status: P1–P7 merged; P8 preview packaging and cross-host verification implemented on `Phase-P8`, ready for PR review. Public release and CLI distribution remain separate decisions, recorded in [compatibility-and-release.md](compatibility-and-release.md). The steps below apply to the existing `crapide` project root, separate from `crap4csharp`. Read [architecture.md](architecture.md) and ADRs [001](adr/001-repository-structure.md), [002](adr/002-cross-ide-sharing.md), [003](adr/003-crap4csharp-integration.md) first. `crap4csharp` remains an external tool; its JSON output was verified against a prebuilt CLI in P3, P4 and P7. The maintainer manages Git for `crapide`; these phases do not require changes to `crap4csharp`.
 
 ## Phase map
 
