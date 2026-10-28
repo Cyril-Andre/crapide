@@ -1,6 +1,6 @@
 # crapide
 
-`crapide` is the future set of IDE adapters for the external `crap4csharp` CLI. The first package targets desktop VS Code and Cursor. **CRAP: Analyze Workspace** runs the installed CLI on explicit request, shows methods over the CRAP threshold in Problems, and displays member metrics through CodeLens.
+`crapide` is a set of IDE adapters for the external `crap4csharp` CLI. The preview VSIX targets desktop VS Code and Cursor. **CRAP: Analyze Workspace** runs the installed CLI on explicit request, shows methods over the CRAP threshold in Problems, and displays member metrics through CodeLens.
 
 ## Project layout
 
@@ -56,7 +56,11 @@ For the optional P7 real-CLI check, run `npm run test:p7-real-cli -- /absolute/p
 
 The extension uses the Node workspace extension host, including remote workspace hosts. Browser and virtual workspaces are unsupported, as are untrusted workspaces.
 
-See [the implementation plan](docs/implementation-plan.md) for P8 and [the architecture](docs/architecture.md) for the CLI boundary.
+## Preview VSIX
+
+From `extensions/vscode/`, run `npm run package` after `npm ci`. This creates `crapide-vscode-0.1.0.vsix` with the compiled extension, its README, changelog and MIT license. `node ../../test/e2e/verify-vsix.cjs crapide-vscode-0.1.0.vsix` checks the archive contents. The VSIX does not include the external CLI. Publishing to the VS Code Marketplace or Open VSX is a separate decision.
+
+See the [installation and troubleshooting guide](docs/install-and-troubleshooting.md), [compatibility and release evidence](docs/compatibility-and-release.md), [implementation plan](docs/implementation-plan.md), and [architecture](docs/architecture.md).
 
 ## Contributing
 

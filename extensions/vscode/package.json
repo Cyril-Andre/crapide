@@ -2,10 +2,16 @@
   "name": "crapide-vscode",
   "displayName": "CRAP IDE",
   "description": "CRAP metric diagnostics and CodeLens for VS Code and Cursor",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
   "private": true,
   "publisher": "crapide",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cyril-Andre/crapide.git"
+  },
+  "bugs": "https://github.com/Cyril-Andre/crapide/issues",
+  "homepage": "https://github.com/Cyril-Andre/crapide#readme",
   "engines": {
     "vscode": "^1.100.0"
   },
@@ -55,6 +61,9 @@
     ]
   },
   "scripts": {
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package --no-dependencies",
+    "package:ls": "vsce ls --no-dependencies",
     "build": "tsc -p .",
     "typecheck": "tsc -p . --noEmit",
     "lint": "eslint src test",
@@ -62,6 +71,7 @@
     "format": "prettier --config .prettierrc.json --write src test ../../test/e2e/*.cjs eslint.config.mjs .vscode-test.cjs package.json tsconfig.json",
     "check": "npm run typecheck && npm run lint && npm run format:check",
     "test": "npm run build && npm run test:unit:built && vscode-test",
+    "test:integration": "npm run build && vscode-test",
     "test:unit": "npm run build && npm run test:unit:built",
     "test:unit:built": "node --test dist/test/unit/*.test.js",
     "test:contract": "npm run build && node ../../test/e2e/json-contract-smoke.cjs",
@@ -75,6 +85,7 @@
     "@types/vscode": "1.100.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "4.0.0",
     "eslint": "^10.11.0",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3",

@@ -23,3 +23,11 @@ npm run test:p7-real-cli -- /absolute/path/to/Microsoft.Crap4CSharp.dll
 ```
 
 The first copy produces exit `0`; the second adds an uncovered, complex method and produces exit `2` with usable JSON; the third removes the matching test project and produces fatal exit `1`. The script deletes its temporary copies after the check and never runs coverage against the original fixture or your workspace project.
+
+P8 adds an optional extension-host test that runs the real CLI on another disposable copy and checks that its exit `2` JSON produces matching Problems and CodeLens:
+
+```sh
+CRAPIDE_REAL_CLI=/absolute/path/to/Microsoft.Crap4CSharp.dll npm run test:integration
+```
+
+The ordinary `npm test` and CI host tests do not set `CRAPIDE_REAL_CLI` and never launch the real CLI. P8 also checks the built VSIX archive with `node ../../test/e2e/verify-vsix.cjs crapide-vscode-0.1.0.vsix`.

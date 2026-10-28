@@ -11,8 +11,12 @@ permissions:
 
 jobs:
   checks:
-    name: checks
-    runs-on: ubuntu-latest
+    name: checks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
     defaults:
       run:
         working-directory: extensions/vscode
@@ -24,11 +28,80 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '24'
+          node-version: '24.13.1'
           package-manager-cache: false
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
       - name: Check types, lint and formatting
         run: npm run check
-      - name: Run unit and VS Code integration tests
-        run: xvfb-run -a npm test
+      - name: Run unit and process tests
+        run: npm run test:unit
+
+  extension-host:
+    name: VS Code ${{ matrix.vscode }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        vscode: ['1.100.0', '1.139.1']
+    defaults:
+      run:
+        working-directory: extensions/vscode
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.13.1'
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run extension-host tests
+        run: xvfb-run -a npm run test:integration
+        env:
+          CRAPIDE_VSCODE_VERSION: ${{ matrix.vscode }}
+
+  package:
+    name: VSIX package
+    needs: [checks, extension-host]
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: extensions/vscode
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.13.1'
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build review package
+        run: npm run package
+      - name: Inspect package contents
+        run: node ../../test/e2e/verify-vsix.cjs crapide-vscode-0.1.0.vsix
+      - name: Upload review package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: crapide-vscode-0.1.0
+          path: extensions/vscode/crapide-vscode-0.1.0.vsix
+          if-no-files-found: error
+
+  required:
+    name: checks
+    if: ${{ always() }}
+    needs: [checks, extension-host, package]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify all P8 jobs passed
+        run: |
+          test '${{ needs.checks.result }}' = success
+          test '${{ needs.extension-host.result }}' = success
+          test '${{ needs.package.result }}' = success
