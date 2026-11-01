@@ -221,7 +221,10 @@ suite('P5 manual analysis', () => {
     );
     try {
       for (const [next, pattern] of [
-        [{ ok: false, kind: 'unsupported-format', stderr: '' }, /JSON-capable/],
+        [
+          { ok: false, kind: 'unsupported-format', stderr: '' },
+          /Crap4CSharp\.IDE\.Cli/,
+        ],
         [
           { ok: false, kind: 'protocol', stderr: '' },
           /malformed or incompatible JSON/,
