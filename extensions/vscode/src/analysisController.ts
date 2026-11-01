@@ -93,13 +93,13 @@ function failureMessage(
   const prefix = `CRAP analysis failed for ${folder.name}: `;
   switch (outcome.kind) {
     case 'missing-cli':
-      return `${prefix}crap4csharp was not found. Set crapide.cliPath or install the CLI on PATH.`;
+      return `${prefix}crap4csharp-ide was not found. Install the Crap4CSharp.IDE.Cli .NET tool on this workspace host or set crapide.cliPath.`;
     case 'missing-runtime':
       return `${prefix}dotnet was not found. Set crapide.dotnetPath or install .NET.`;
     case 'missing-sdk':
       return `${prefix}the required .NET SDK is unavailable. Check global.json and installed SDKs (dotnet --list-sdks); see the CRAP IDE output.`;
     case 'unsupported-format':
-      return `${prefix}this CLI does not support --format json. Install a JSON-capable crap4csharp build and update crapide.cliPath.`;
+      return `${prefix}this CLI does not support --format json. Install or update the Crap4CSharp.IDE.Cli .NET tool, then check crapide.cliPath.`;
     case 'fatal-exit':
       if (/span multiple projects/i.test(outcome.stderr))
         return `${prefix}the folder spans multiple C# projects. Analyze a folder with one owning project.`;

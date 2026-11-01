@@ -27,11 +27,11 @@ npm test
 
 `check` runs TypeScript validation, ESLint, and Prettier validation. `test` builds the extension, runs the Node tests, and launches activation, diagnostic, and CodeLens tests in a VS Code Extension Development Host. The test runner may download VS Code into an ignored `.vscode-test/` directory.
 
-`npm run test:unit` runs the JSON parser, process-runner, and path-resolution tests without a VS Code host or real CLI. The runner accepts an explicit native executable or prebuilt `.dll`, or searches for `crap4csharp` on `PATH`. It always passes `--format json` as separate arguments, treats exit `0` and `2` as usable only with valid JSON, and reports all incomplete runs as failures. It serializes runs per invocation directory. On cancellation or output overflow, it kills the process group on POSIX or uses `taskkill /T /F` on Windows to stop descendants such as `dotnet test`. Fixture provenance and accepted fields are in [the JSON contract](contracts/json-contract.md).
+`npm run test:unit` runs the JSON parser, process-runner, and path-resolution tests without a VS Code host or real CLI. The runner accepts an explicit native executable or prebuilt `.dll`, or searches for `crap4csharp-ide` on `PATH`. It always passes `--format json` as separate arguments, treats exit `0` and `2` as usable only with valid JSON, and reports all incomplete runs as failures. It serializes runs per invocation directory. On cancellation or output overflow, it kills the process group on POSIX or uses `taskkill /T /F` on Windows to stop descendants such as `dotnet test`. Fixture provenance and accepted fields are in [the JSON contract](contracts/json-contract.md).
 
 ## Manual analysis and CodeLens
 
-Install a prebuilt JSON-capable `crap4csharp` CLI on the **workspace host** (your local machine for local folders, or the remote host for remote folders). In VS Code, open **Settings**, search for `crapide.cliPath`, and set it for each workspace folder. Point it to a native executable or a prebuilt `.dll`; leave it empty to find `crap4csharp` on the host `PATH`. For a `.dll`, set `crapide.dotnetPath` to the `dotnet` executable if it is not on `PATH`. Absolute paths work; relative paths are resolved from the workspace folder. An invalid explicit path is reported and is never replaced by a `PATH` fallback. For example, folder settings can contain:
+Install the `Crap4CSharp.IDE.Cli` .NET tool on the **workspace host** (your local machine for local folders, or the remote host for remote folders). Once the package is published to NuGet, the standard installation will be `dotnet tool install --global Crap4CSharp.IDE.Cli --version <published-version>`. The package is currently in release preparation; see the [installation guide](docs/install-and-troubleshooting.md) for preview installation. The extension finds its `crap4csharp-ide` command on the host `PATH` by default. In VS Code, use the per-folder `crapide.cliPath` setting only when you need an explicit native executable or prebuilt `.dll`. For a `.dll`, set `crapide.dotnetPath` if `dotnet` is not on `PATH`. Absolute paths work; relative paths are resolved from the workspace folder. An invalid explicit path is reported and is never replaced by a `PATH` fallback. For example, folder settings can contain:
 
 ```json
 {
@@ -58,7 +58,7 @@ The extension uses the Node workspace extension host, including remote workspace
 
 ## Preview VSIX
 
-From `extensions/vscode/`, run `npm run package` after `npm ci`. This creates `crapide-vscode-0.1.0.vsix` with the compiled extension, its README, changelog and MIT license. `node ../../test/e2e/verify-vsix.cjs crapide-vscode-0.1.0.vsix` checks the archive contents. The VSIX does not include the external CLI. Publishing to the VS Code Marketplace or Open VSX is a separate decision.
+From `extensions/vscode/`, run `npm run package` after `npm ci`. This creates `crapide-vscode-0.1.0.vsix` with the compiled extension, its README, changelog and MIT license. `node ../../test/e2e/verify-vsix.cjs crapide-vscode-0.1.0.vsix` checks the archive contents. The VSIX does not include the external CLI. Public distribution requires publishing the CLI package to NuGet and this extension to both the VS Code Marketplace and Open VSX.
 
 See the [installation and troubleshooting guide](docs/install-and-troubleshooting.md), [compatibility and release evidence](docs/compatibility-and-release.md), [implementation plan](docs/implementation-plan.md), and [architecture](docs/architecture.md).
 

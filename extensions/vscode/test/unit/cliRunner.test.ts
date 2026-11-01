@@ -27,7 +27,7 @@ class FakeProcess implements ProcessAdapter {
 
 test('constructs fixed arguments without shell splitting', () => {
   assert.deepEqual(buildInvocation({ cwd, executable: {} }), {
-    command: 'crap4csharp',
+    command: 'crap4csharp-ide',
     args: ['--format', 'json'],
     cwd,
   });

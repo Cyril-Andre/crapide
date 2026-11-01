@@ -43,7 +43,7 @@
           "type": "string",
           "default": "",
           "scope": "resource",
-          "description": "Path to a prebuilt crap4csharp native executable or .dll, resolved relative to this workspace folder. Leave empty to find crap4csharp on the workspace host PATH."
+          "description": "Path to a prebuilt Crap4CSharp.IDE.Cli executable or .dll, resolved relative to this workspace folder. Leave empty to find crap4csharp-ide on the workspace host PATH."
         },
         "crapide.dotnetPath": {
           "type": "string",

@@ -85,7 +85,7 @@ export function buildInvocation(request: AnalysisRequest): Invocation {
 
   const cwd = path.resolve(request.cwd);
   const cli =
-    cliPath === undefined ? 'crap4csharp' : path.resolve(cwd, cliPath);
+    cliPath === undefined ? 'crap4csharp-ide' : path.resolve(cwd, cliPath);
   if (cliPath !== undefined && path.extname(cli).toLowerCase() === '.dll') {
     const dotnet =
       dotnetPath === undefined ? 'dotnet' : path.resolve(cwd, dotnetPath);
