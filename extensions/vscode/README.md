@@ -1,11 +1,11 @@
 # CRAP IDE for VS Code and Cursor
 
-Run **CRAP: Analyze Workspace** in a trusted, file-backed C# workspace. The extension shows CRAP scores above 8 in Problems and displays CRAP, complexity and coverage beside located members with CodeLens. The values come from the external `crap4csharp` CLI; this package does not calculate them or include the CLI.
+Run **CRAP: Analyze Workspace** in a trusted, file-backed C# workspace. The extension shows CRAP scores above 8 in Problems and displays CRAP, complexity and coverage beside located members with CodeLens. The values come from the external `Crap4CSharp.IDE.Cli` .NET tool; this extension does not calculate them or include the CLI.
 
 ## Setup
 
-1. Install a prebuilt `crap4csharp` version that supports `--format json` on the machine hosting the workspace. Install its required .NET SDK and the project's test dependencies.
-2. Set `crapide.cliPath` in the folder settings to its native executable or prebuilt `.dll`. Leave it empty to find `crap4csharp` on the workspace host `PATH`.
+1. Install `Crap4CSharp.IDE.Cli` on the machine hosting the workspace. Once published to NuGet, run `dotnet tool install --global Crap4CSharp.IDE.Cli --version <published-version>`. Install the required .NET SDK and the project's test dependencies.
+2. Leave `crapide.cliPath` empty to find `crap4csharp-ide` on the workspace host `PATH`. Set it per folder only for an explicit native executable or prebuilt `.dll`.
 3. For a `.dll`, set `crapide.dotnetPath` if `dotnet` is not on the host `PATH`.
 4. Open a folder with `src/`, one owning C# project and a matching test project, then run **CRAP: Analyze Workspace** from the Command Palette.
 
@@ -19,4 +19,4 @@ Read the **CRAP IDE** output channel for the CLI's bounded diagnostic output and
 
 The extension requires a desktop VS Code or Cursor workspace host. Browser and virtual workspaces are unsupported. It does not analyze untrusted workspaces, watch files, or orchestrate several projects as one run. Member locations use CLI line numbers and column zero because the JSON format has no columns.
 
-For installation and development details, see the [project README](https://github.com/Cyril-Andre/crapide#readme). `crap4csharp` is a separate external project and is not bundled with this extension.
+For installation and development details, see the [project README](https://github.com/Cyril-Andre/crapide#readme). `Crap4CSharp.IDE.Cli` is distributed separately and is not bundled with this extension.

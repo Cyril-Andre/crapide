@@ -1,6 +1,6 @@
 # Install and use the preview VSIX
 
-The VSIX contains the VS Code/Cursor workspace extension. Install the external `crap4csharp` CLI separately on the machine that hosts the project. This preview uses its `--format json` output; [the observed JSON contract](../contracts/json-contract.md) records the tested upstream commit.
+The VSIX contains the VS Code/Cursor workspace extension. Install the `Crap4CSharp.IDE.Cli` .NET tool on the machine that hosts the project. Its `crap4csharp-ide` command supplies the JSON output required by the extension; [the observed JSON contract](../contracts/json-contract.md) records the tested CLI behavior.
 
 ## Install
 
@@ -15,10 +15,19 @@ cursor --install-extension /absolute/path/to/crapide-vscode-0.1.0.vsix
 
 For a remote folder, install the extension on the remote workspace host as prompted by the editor. The CLI, `dotnet`, SDK and project test dependencies must also be available there. VS Code runs a `workspace` extension where the workspace lives; check **Developer: Show Running Extensions** if its location is unclear ([VS Code remote extension guidance](https://code.visualstudio.com/api/advanced-topics/remote-extensions)).
 
+Install the CLI on that same host. After `Crap4CSharp.IDE.Cli` is published to NuGet:
+
+```sh
+dotnet tool install --global Crap4CSharp.IDE.Cli --version <published-version>
+crap4csharp-ide --help
+```
+
+Until publication, install a reviewed preview package from its local `.nupkg` directory with `dotnet tool install --global Crap4CSharp.IDE.Cli --version 0.1.0-preview.1 --add-source /path/to/package-directory`. The `crap4csharp-ide` command must be on the workspace host `PATH` (typically via the .NET global tools directory). The CLI and extension are separate installs; the VSIX contains no CLI binary.
+
 ## Analyze a folder
 
 1. Open and trust a file-backed folder with `src/`.
-2. In folder settings, set `crapide.cliPath` to a prebuilt CLI executable or `.dll`. Leave it empty only when `crap4csharp` is on the workspace host `PATH`.
+2. Leave `crapide.cliPath` empty to use `crap4csharp-ide` on the workspace host `PATH`. Set it per folder only when using an explicit prebuilt CLI executable or `.dll`.
 3. For a `.dll`, set `crapide.dotnetPath` if `dotnet` is not on the host `PATH`. Absolute paths and paths relative to the folder are supported.
 4. Ensure the source belongs to one `.csproj` in the folder and a matching `*.Tests.csproj` or `*.UnitTests.csproj` transitively references it. The test project needs `coverlet.collector`.
 5. Run **CRAP: Analyze Workspace**. Confirm replacement if `coverage/` already exists. The CLI runs tests, generates coverage and may return exit `2` when scores exceed 8; that exit still supplies a usable analysis.
@@ -32,9 +41,9 @@ Open **View: Toggle Output**, choose **CRAP IDE**, and read the run summary and 
 | Symptom | Check |
 | --- | --- |
 | Command missing | Confirm the VSIX is installed and enabled on the workspace host; reload the editor window. |
-| CLI or `dotnet` missing | Check the per-folder paths or host `PATH`. Explicit invalid paths never fall back silently. |
+| CLI or `dotnet` missing | Run `crap4csharp-ide --help` and `dotnet --info` on the workspace host. Check the per-folder paths or host `PATH`. Explicit invalid paths never fall back silently. |
 | Required .NET SDK unavailable | Compare the project's `global.json` with `dotnet --list-sdks` on the workspace host. |
-| `--format json` unsupported | Install a CLI build with JSON output and update `crapide.cliPath`. |
+| `--format json` unsupported | Install or update `Crap4CSharp.IDE.Cli` and check `crapide.cliPath` for an older executable. |
 | Invalid JSON | Verify the configured CLI build against the [JSON contract](../contracts/json-contract.md). |
 | Exit `1` | Inspect test failures, matching test-project discovery, `coverlet.collector`, and coverage output in the channel. |
 | No `src/` or more than one owning project | Open a supported single-project folder. Multi-project orchestration is not in this preview. |
